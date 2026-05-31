@@ -1,0 +1,101 @@
+\section{VLM-based Extension for PatchCore's Encoder}
+\begin{frame}{Opportunity}
+\begin{block}{}
+    With the rise of Vision-Language Models (CLIP, BLIP, Flamingo, etc), we now have models that can:
+    \begin{itemize}
+        \item Progress with both visual and linguistic data
+        \item Align images with text descriptions
+        \item Generalize to novel concepts without fine-tuning or retraining (zero-shot capability).
+    \end{itemize}
+These models open up a new possibility: anomaly detection that is guided by both visual data and semantic, natural language.
+\end{block}
+\end{frame}
+
+\begin{frame}{CNN Encoder vs VLM Encoder}
+\tcbset{
+  width=0.95\linewidth,
+  arc=5pt,
+  boxrule=0.8pt,
+  coltitle=black,
+  fonttitle=\bfseries,
+  center title
+}
+
+\begin{multicols}{2}
+
+% === Left column: CNN Encoder Limitations ===
+\centering
+\textbf{CNN Encoder}\\[0.2cm]
+
+\begin{tcolorbox}[colframe=blue!80!black, colback=blue!5]
+\centering
+Mainly focus on local textures
+\end{tcolorbox}
+
+\vspace{0.1cm}
+
+\begin{tcolorbox}[colframe=green!50!black, colback=green!5]
+\centering
+Requires labeled defect data
+\end{tcolorbox}
+
+\vspace{0.1cm}
+
+\begin{tcolorbox}[colframe=red!70!black, colback=red!5]
+\centering
+Struggles with rare/unseen anomalies
+\end{tcolorbox}
+
+\vspace{0.1cm}
+
+\begin{tcolorbox}[colframe=brown!70!black, colback=brown!5]
+\centering
+No semantic understanding
+\end{tcolorbox}
+
+\columnbreak
+
+% === Right column: VLM Encoder Advantages ===
+\centering
+\textbf{VLM Encoder}\\[0.2cm]
+
+\begin{tcolorbox}[colframe=blue!80!black, colback=blue!5]
+\centering
+Captures high-level, global concepts
+\end{tcolorbox}
+
+\vspace{0.1cm}
+
+\begin{tcolorbox}[colframe=green!50!black, colback=green!5]
+\centering
+Supports prompt-based detection
+\end{tcolorbox}
+
+\vspace{0.1cm}
+
+\begin{tcolorbox}[colframe=red!70!black, colback=red!5]
+\centering
+Generalizes to novel defects
+\end{tcolorbox}
+
+\vspace{0.1cm}
+
+\begin{tcolorbox}[colframe=brown!70!black, colback=brown!5]
+\centering
+Enables semantic reasoning
+\end{tcolorbox}
+\end{multicols}
+\end{frame}
+\begin{frame}{Proposal of Extension}
+\centering
+\begin{tcolorbox}[colback=blue!5!white, colframe=blue!50!black, width=0.8\textwidth]
+\centering
+\Large{\textbf{Optimize PatchCore's encoder by replacing its CNN backbone with a VLM encoder}}
+\end{tcolorbox}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.4\linewidth]{images/vlm_encoder.jpg}
+\end{figure}
+\end{frame}
+
+

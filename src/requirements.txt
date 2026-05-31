@@ -1,0 +1,10 @@
+ultralytics 
+transformers 
+peft 
+trl 
+datasets 
+accelerate 
+bitsandbytes 
+pandas 
+opencv-python 
+huggingface_hub

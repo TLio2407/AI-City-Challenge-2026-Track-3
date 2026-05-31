@@ -1,0 +1,5 @@
+Trích xuất object => + với ảnh => fit vô VLM => give output
+Research về dataset
+Download Dataset => try with VLM/ollama => benchmark (qwen 3.6)
+Apply Detection(YOLO) => Merge để localize vật thể => Description
+
