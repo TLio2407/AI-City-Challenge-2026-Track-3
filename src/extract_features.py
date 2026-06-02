@@ -4,9 +4,9 @@ import cv2
 import math
 from ultralytics import YOLO
 
-# OPTIMIZATION 1: Use the Medium model instead of X. 
-# It is 3x faster and highly accurate for standard traffic objects.
-yolo_model = YOLO('yolo11m.pt') 
+# OPTIMIZATION 1: 'yolo11s.pt' (Small) is significantly faster than 'm' and 
+# retains more than enough accuracy for standard macroscopic traffic tracking.
+yolo_model = YOLO('yolo11s.pt') 
 
 def calculate_iou(box1, box2):
     x_left = max(box1[0], box2[0])
@@ -29,32 +29,30 @@ def cache_video_features(video_dir, output_cache_path):
             video_path = os.path.join(root, file)
             rel_path = os.path.relpath(video_path, video_dir)
             
-            # Get accurate FPS to calculate the stride dynamically
             cap = cv2.VideoCapture(video_path)
             fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
             cap.release() 
             
-            # We want to process exactly 2 frames per second
             stride = max(1, int(fps / 2))
             print(f"Extracting: {rel_path} (Stride: {stride})")
             
-            # OPTIMIZATION 2 & 3: stream=True, vid_stride, and half=True
+            # OPTIMIZATION 2: Native class filtering and enforced image size
             results_generator = yolo_model.track(
                 video_path, 
                 persist=True, 
                 tracker="bytetrack.yaml", 
                 verbose=False, 
                 stream=True,
-                vid_stride=stride, # Completely bypasses decoding intermediate frames
-                half=True          # Uses FP16 for 2x faster GPU inference
+                vid_stride=stride,
+                half=True,
+                classes=[0, 2, 3, 5, 7], # Only track: Person, Car, Motorcycle, Bus, Truck
+                imgsz=640                # Cap resolution to speed up inference
             )
             
             events = []
             track_history = {} 
             
-            # We removed the manual frame_idx check because vid_stride handles it natively.
             for frame_idx, r in enumerate(results_generator):
-                # Calculate the actual timestamp in the video based on the stride
                 timestamp = (frame_idx * stride) / fps
                 
                 if r.boxes is not None and r.boxes.id is not None:
@@ -62,8 +60,6 @@ def cache_video_features(video_dir, output_cache_path):
                     
                     for box, track_id, cls in zip(r.boxes.xyxy, r.boxes.id, r.boxes.cls):
                         class_name = yolo_model.names[int(cls)]
-                        if class_name not in ['car', 'truck', 'bus', 'person', 'motorcycle']: continue
-                        
                         track_id = int(track_id)
                         box_coords = [float(b) for b in box]
                         center_x = (box_coords[0] + box_coords[2]) / 2
@@ -89,8 +85,17 @@ def cache_video_features(video_dir, output_cache_path):
             
             cache[rel_path] = " ".join(events) if events else "No relevant traffic objects detected."
             
-            with open(output_cache_path, 'w') as f:
-                json.dump(cache, f)
+            # OPTIMIZATION 3: Batch the disk writes
+            # Only save the cache to disk every 50 videos to prevent I/O blocking, 
+            # while still protecting against total data loss if the script crashes.
+            if len(cache) % 50 == 0:
+                with open(output_cache_path, 'w') as f:
+                    json.dump(cache, f)
+
+    # Final guaranteed save at the end of the entire loop
+    with open(output_cache_path, 'w') as f:
+        json.dump(cache, f)
+        print(f"Extraction complete. Fully cached to {output_cache_path}")
 
 # Execute
 cache_video_features("./videos", "yolo_tracking_cache.json")
