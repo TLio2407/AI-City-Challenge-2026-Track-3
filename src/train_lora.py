@@ -2,10 +2,10 @@ import os
 import json
 import torch
 from datasets import Dataset
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
+from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, BitsAndBytesConfig
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from trl import SFTTrainer
-
+    
 # 1. Paths & Configuration
 MODEL_ID = "google/gemma-1.1-7b-it" # Alternative: "meta-llama/Meta-Llama-3-8B-Instruct"
 OUTPUT_DIR = "./lora-traffic-generalist"
@@ -82,9 +82,18 @@ tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
 tokenizer.pad_token = tokenizer.eos_token
 
 print("Loading base model in 4-bit precision configuration...")
+
+# Define the 4-bit quantization configuration
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_use_double_quant=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_compute_dtype=torch.bfloat16  # Gemma models work well with bfloat16
+)
+
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_ID, 
-    load_in_4bit=True, 
+    quantization_config=bnb_config, 
     device_map="auto"
 )
 model = prepare_model_for_kbit_training(model)
